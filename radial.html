@@ -28,21 +28,30 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        background: #f6f6f6;
       }
 
       #universe-canvas {
-        position: absolute;
+        position: fixed;
         top: 0;
         left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 1;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
+        transition: opacity 1.5s ease-out;
+      }
+
+      #universe-canvas.fade-out {
+        opacity: 0;
+      }
+
+      #universe-canvas.fade-in {
+        opacity: 1;
+        transition: opacity 1.2s ease-in;
       }
 
       .hero-content {
         position: relative;
-        z-index: 2;
+        z-index: 10;
         text-align: center;
         color: #333;
         pointer-events: none;
@@ -72,8 +81,9 @@
       }
 
       .content {
+        position: relative;
+        z-index: 10;
         min-height: 200vh;
-        background: linear-gradient(to bottom, #f6f6f6, #eee);
         padding: 4rem 2rem;
       }
 
@@ -238,7 +248,28 @@
             const maxOffset = 200;
             this.centerOffset.x = scrollProgress * maxOffset * Math.cos(this.time * 0.001);
             this.centerOffset.y = scrollProgress * maxOffset * Math.sin(this.time * 0.001);
+
+            // Handle canvas fade animation
+            this.handleCanvasFade(rect, heroHeight);
           });
+        }
+
+        handleCanvasFade(rect, heroHeight) {
+          const canvas = this.canvas;
+          const fadeThreshold = heroHeight * 0.75;
+
+          // Calculate if we should fade out (when hero section is mostly out of view)
+          const shouldFadeOut = -rect.top > fadeThreshold;
+
+          if (shouldFadeOut && !canvas.classList.contains('fade-out')) {
+            // Start fade out
+            canvas.classList.remove('fade-in');
+            canvas.classList.add('fade-out');
+          } else if (!shouldFadeOut && canvas.classList.contains('fade-out')) {
+            // Start fade in (when scrolling back up)
+            canvas.classList.remove('fade-out');
+            canvas.classList.add('fade-in');
+          }
         }
 
         updateMouse() {
@@ -272,9 +303,9 @@
 
             // Create gradient for the line
             const gradient = this.ctx.createLinearGradient(0, 0, line.length, 0);
-            gradient.addColorStop(0, `rgba(50, 50, 50, ${dynamicOpacity})`);
-            gradient.addColorStop(0.7, `rgba(50, 50, 50, ${dynamicOpacity * 0.3})`);
-            gradient.addColorStop(1, 'rgba(50, 50, 50, 0)');
+            gradient.addColorStop(0, `rgba(150, 150, 150, ${dynamicOpacity})`);
+            gradient.addColorStop(0.7, `rgba(150, 150, 150, ${dynamicOpacity * 0.3})`);
+            gradient.addColorStop(1, 'rgba(150, 150, 150, 0)');
 
             this.ctx.strokeStyle = gradient;
             this.ctx.lineWidth = line.thickness;
