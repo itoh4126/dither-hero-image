@@ -1,4 +1,3 @@
-import './style.css';
 import { DitherBackground } from './dither.js';
 
 // Initialize the dither background
