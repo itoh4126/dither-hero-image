@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hero Image Playground</title>
+    <link rel="stylesheet" href="./src/style.css" type="text/css">
+  </head>
+  <body>
+    <div id="app">
+      <section class="hero" id="hero-section">
+        <canvas id="dither-canvas"></canvas>
+        <div class="hero-content">
+          <h1>時空を超えて<br>
+          最高の製品を創り続ける
+          </h1>
+        </div>
+      </section>
+      <section class="content">
+        <div class="content-inner">
+          <h2>Scroll to see the effect</h2>
+          <p>When you scroll down and the hero section is about 3/4 out of view, it will slide away to one side.</p>
+          <div style="height: 200vh; padding: 2rem;">
+            <h3>More content here...</h3>
+            <p>Keep scrolling to test the hero section animation.</p>
+          </div>
+        </div>
+      </section>
+    </div>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

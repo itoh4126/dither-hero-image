@@ -2,32 +2,411 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/svg+xml" href="./vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Hero Image Playground</title>
-    <link rel="stylesheet" href="./src/style.css" type="text/css">
+    <meta name="robots" content="noindex">
+    <title>Radial Hero Image</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+          'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+          sans-serif;
+        background: #f6f6f6;
+        color: #333;
+        overflow-x: hidden;
+      }
+
+      header {
+        position: fixed;
+        z-index: 20;
+        img {
+          width: 100%;
+        }
+      }
+
+      .hero {
+        position: relative;
+        width: 100%;
+      }
+
+      #universe-canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: -1;
+        transition: opacity 1.5s ease-out;
+      }
+
+      #universe-canvas.fade-out {
+        opacity: 0;
+      }
+
+      #universe-canvas.fade-in {
+        opacity: 1;
+        transition: opacity 1.2s ease-in;
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 10;
+        padding-block-start: 10.5rem;
+        text-align: center;
+        color: #333;
+        pointer-events: none;
+      }
+
+      .hero-content h2 {
+        font-size: 4rem;
+        font-weight: 300;
+        margin: 8rem 0;
+        letter-spacing: 0.1em;
+        line-height: 1.2;
+      }
+
+      .universe-title {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4rem;
+      }
+
+      .understand {
+        opacity: 0.9;
+      }
+
+      .the-universe {
+        opacity: 0.7;
+      }
+
+      .content {
+        position: relative;
+        z-index: 10;
+        min-height: 200vh;
+        padding: 4rem 2rem;
+      }
+
+      .content-inner {
+        max-width: 800px;
+        margin: 0 auto;
+        color: #666;
+      }
+
+      .content h2 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        color: #333;
+      }
+
+      .content p {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 2rem;
+      }
+
+      .mockup {
+        max-width: 1440px;
+      }
+
+      @media (max-width: 768px) {
+        .hero-content h2 {
+          font-size: 2.5rem;
+        }
+
+        .universe-title {
+          flex-direction: column;
+          gap: 1rem;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="app">
+      <header>
+        <img class="mockup" src="./header.png" alt="" />
+      </header>
+      <canvas id="universe-canvas"></canvas>
       <section class="hero" id="hero-section">
-        <canvas id="dither-canvas"></canvas>
         <div class="hero-content">
-          <h1>時空を超えて<br>
-          最高の製品を創り続ける
+          <h1>
+            <img class="mockup" src="./logo.svg" alt="Jicoo" />
           </h1>
+          <h2 class="universe-title">
+            時空を超えて<br>
+            最高の製品を創り続ける
+          </h2>
         </div>
       </section>
       <section class="content">
-        <div class="content-inner">
-          <h2>Scroll to see the effect</h2>
-          <p>When you scroll down and the hero section is about 3/4 out of view, it will slide away to one side.</p>
-          <div style="height: 200vh; padding: 2rem;">
-            <h3>More content here...</h3>
-            <p>Keep scrolling to test the hero section animation.</p>
-          </div>
-        </div>
+        <img class="mockup" src="./page-mockup.png" alt="" />
       </section>
     </div>
-    <script type="module" src="./src/main.js"></script>
+    <script type="module">
+      class UniverseBackground {
+        constructor(canvas) {
+          this.canvas = canvas;
+          this.ctx = canvas.getContext('2d');
+          this.mouse = { x: 0, y: 0 };
+          this.targetMouse = { x: 0, y: 0 };
+
+          // Animation parameters
+          this.time = 0;
+          this.animationId = null;
+          this.scrollOffset = 0;
+          this.centerOffset = { x: 0, y: 0 };
+
+          // Radial lines
+          this.lineCount = 120;
+          this.lines = [];
+
+          // Particles
+          this.particles = [];
+          this.particleCount = 80;
+
+          this.init();
+          this.setupEventListeners();
+          this.setupScrollListener();
+          this.animate();
+        }
+
+        init() {
+          this.resize();
+          this.generateLines();
+          this.generateParticles();
+        }
+
+        resize() {
+          const rect = this.canvas.getBoundingClientRect();
+          const dpr = window.devicePixelRatio || 1;
+
+          this.canvas.width = rect.width * dpr;
+          this.canvas.height = rect.height * dpr;
+          this.canvas.style.width = rect.width + 'px';
+          this.canvas.style.height = rect.height + 'px';
+
+          this.ctx.scale(dpr, dpr);
+
+          this.centerX = rect.width / 2;
+          this.centerY = rect.height / 2;
+          this.maxRadius = Math.sqrt(rect.width * rect.width + rect.height * rect.height) / 2;
+        }
+
+        generateLines() {
+          this.lines = [];
+          for (let i = 0; i < this.lineCount; i++) {
+            const angle = (i / this.lineCount) * Math.PI * 2;
+            this.lines.push({
+              angle: angle,
+              baseAngle: angle,
+              opacity: Math.random() * 0.3 + 0.1,
+              length: this.maxRadius * (0.7 + Math.random() * 0.3),
+              speed: (Math.random() - 0.5) * 0.0002,
+              thickness: Math.random() * 0.5 + 0.2
+            });
+          }
+        }
+
+        generateParticles() {
+          this.particles = [];
+          for (let i = 0; i < this.particleCount; i++) {
+            this.particles.push({
+              x: Math.random() * this.canvas.style.width.replace('px', ''),
+              y: Math.random() * this.canvas.style.height.replace('px', ''),
+              size: Math.random() * 3 + 1,
+              opacity: Math.random() * 0.8 + 0.2,
+              speedX: (Math.random() - 0.5) * 0.3,
+              speedY: (Math.random() - 0.5) * 0.3,
+              rotation: Math.random() * Math.PI * 2,
+              rotationSpeed: (Math.random() - 0.5) * 0.02
+            });
+          }
+        }
+
+        setupEventListeners() {
+          window.addEventListener('resize', () => this.resize());
+
+          this.canvas.addEventListener('mousemove', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            this.targetMouse.x = e.clientX - rect.left;
+            this.targetMouse.y = e.clientY - rect.top;
+          });
+        }
+
+        setupScrollListener() {
+          window.addEventListener('scroll', () => {
+            const heroSection = document.getElementById('hero-section');
+            const rect = heroSection.getBoundingClientRect();
+            const heroHeight = heroSection.offsetHeight;
+            const scrollProgress = Math.max(0, Math.min(1, -rect.top / (heroHeight * 0.75)));
+
+            this.scrollOffset = scrollProgress;
+
+            // Move center point behind as we scroll
+            const maxOffset = 200;
+            this.centerOffset.x = scrollProgress * maxOffset * Math.cos(this.time * 0.001);
+            this.centerOffset.y = scrollProgress * maxOffset * Math.sin(this.time * 0.001);
+
+            // Handle canvas fade animation
+            this.handleCanvasFade(rect, heroHeight);
+          });
+        }
+
+        handleCanvasFade(rect, heroHeight) {
+          const canvas = this.canvas;
+          const fadeThreshold = heroHeight * 0.75;
+
+          // Calculate if we should fade out (when hero section is mostly out of view)
+          const shouldFadeOut = -rect.top > fadeThreshold;
+
+          if (shouldFadeOut && !canvas.classList.contains('fade-out')) {
+            // Start fade out
+            canvas.classList.remove('fade-in');
+            canvas.classList.add('fade-out');
+          } else if (!shouldFadeOut && canvas.classList.contains('fade-out')) {
+            // Start fade in (when scrolling back up)
+            canvas.classList.remove('fade-out');
+            canvas.classList.add('fade-in');
+          }
+        }
+
+        updateMouse() {
+          const smoothing = 0.1;
+          this.mouse.x += (this.targetMouse.x - this.mouse.x) * smoothing;
+          this.mouse.y += (this.targetMouse.y - this.mouse.y) * smoothing;
+        }
+
+        drawRadialLines() {
+          this.ctx.save();
+          const dynamicCenterX = this.centerX + this.centerOffset.x;
+          const dynamicCenterY = this.centerY + this.centerOffset.y;
+          this.ctx.translate(dynamicCenterX, dynamicCenterY);
+
+          for (const line of this.lines) {
+            // Mouse influence
+            const mouseDistance = Math.sqrt(
+              (this.mouse.x - this.centerX) ** 2 +
+              (this.mouse.y - this.centerY) ** 2
+            );
+            const mouseInfluence = Math.max(0, 1 - mouseDistance / 200) * 0.3;
+
+            // Update angle with time and mouse influence
+            line.angle = line.baseAngle + this.time * line.speed + mouseInfluence * Math.sin(this.time * 0.001);
+
+            // Calculate dynamic opacity
+            const dynamicOpacity = line.opacity + Math.sin(this.time * 0.002 + line.baseAngle * 3) * 0.1;
+
+            this.ctx.save();
+            this.ctx.rotate(line.angle);
+
+            // Create gradient for the line
+            const gradient = this.ctx.createLinearGradient(0, 0, line.length, 0);
+            gradient.addColorStop(0, `rgba(150, 150, 150, ${dynamicOpacity})`);
+            gradient.addColorStop(0.7, `rgba(150, 150, 150, ${dynamicOpacity * 0.3})`);
+            gradient.addColorStop(1, 'rgba(150, 150, 150, 0)');
+
+            this.ctx.strokeStyle = gradient;
+            this.ctx.lineWidth = line.thickness;
+            this.ctx.lineCap = 'round';
+
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, 0);
+            this.ctx.lineTo(line.length, 0);
+            this.ctx.stroke();
+
+            this.ctx.restore();
+          }
+
+          this.ctx.restore();
+        }
+
+        drawParticles() {
+          for (const particle of this.particles) {
+            // Update particle position
+            particle.x += particle.speedX;
+            particle.y += particle.speedY;
+            particle.rotation += particle.rotationSpeed;
+
+            // Wrap around screen
+            const canvasWidth = parseFloat(this.canvas.style.width);
+            const canvasHeight = parseFloat(this.canvas.style.height);
+
+            if (particle.x < -10) particle.x = canvasWidth + 10;
+            if (particle.x > canvasWidth + 10) particle.x = -10;
+            if (particle.y < -10) particle.y = canvasHeight + 10;
+            if (particle.y > canvasHeight + 10) particle.y = -10;
+
+            // Mouse interaction
+            const mouseDistance = Math.sqrt(
+              (this.mouse.x - particle.x) ** 2 +
+              (this.mouse.y - particle.y) ** 2
+            );
+            const mouseInfluence = Math.max(0, 1 - mouseDistance / 150);
+
+            // Dynamic opacity based on time and mouse proximity
+            const baseOpacity = particle.opacity + Math.sin(this.time * 0.003 + particle.x * 0.01) * 0.2;
+            const finalOpacity = Math.min(1, baseOpacity + mouseInfluence * 0.5);
+
+            this.ctx.save();
+            this.ctx.translate(particle.x, particle.y);
+            this.ctx.rotate(particle.rotation);
+
+            // Draw square particle
+            this.ctx.fillStyle = `rgba(80, 80, 80, ${finalOpacity})`;
+            const size = particle.size + mouseInfluence * 2;
+            this.ctx.fillRect(-size/2, -size/2, size, size);
+
+            // Add a subtle glow effect for particles near mouse
+            if (mouseInfluence > 0.3) {
+              this.ctx.shadowColor = 'rgba(80, 80, 80, 0.5)';
+              this.ctx.shadowBlur = 10;
+              this.ctx.fillRect(-size/2, -size/2, size, size);
+              this.ctx.shadowBlur = 0;
+            }
+
+            this.ctx.restore();
+          }
+        }
+
+        animate() {
+          this.time = performance.now();
+          this.updateMouse();
+
+          // Clear canvas
+          this.ctx.fillStyle = '#f6f6f6';
+          this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+          // Draw elements
+          this.drawRadialLines();
+          this.drawParticles();
+
+          this.animationId = requestAnimationFrame(() => this.animate());
+        }
+
+        destroy() {
+          if (this.animationId) {
+            cancelAnimationFrame(this.animationId);
+          }
+          window.removeEventListener('resize', this.resize);
+        }
+      }
+
+      // Initialize
+      document.addEventListener('DOMContentLoaded', () => {
+        const canvas = document.getElementById('universe-canvas');
+        const universe = new UniverseBackground(canvas);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+          universe.destroy();
+        });
+      });
+    </script>
   </body>
 </html>
