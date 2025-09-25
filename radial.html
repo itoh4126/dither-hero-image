@@ -21,13 +21,17 @@
         overflow-x: hidden;
       }
 
+      header {
+        position: fixed;
+        z-index: 20;
+        img {
+          width: 100%;
+        }
+      }
+
       .hero {
         position: relative;
         width: 100%;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
       }
 
       #universe-canvas {
@@ -52,15 +56,16 @@
       .hero-content {
         position: relative;
         z-index: 10;
+        padding-block-start: 10.5rem;
         text-align: center;
         color: #333;
         pointer-events: none;
       }
 
-      .hero-content h1 {
+      .hero-content h2 {
         font-size: 4rem;
         font-weight: 300;
-        margin: 0;
+        margin: 8rem 0;
         letter-spacing: 0.1em;
         line-height: 1.2;
       }
@@ -105,8 +110,12 @@
         margin-bottom: 2rem;
       }
 
+      .mockup {
+        max-width: 1440px;
+      }
+
       @media (max-width: 768px) {
-        .hero-content h1 {
+        .hero-content h2 {
           font-size: 2.5rem;
         }
 
@@ -119,29 +128,23 @@
   </head>
   <body>
     <div id="app">
+      <header>
+        <img class="mockup" src="./header.png" alt="" />
+      </header>
+      <canvas id="universe-canvas"></canvas>
       <section class="hero" id="hero-section">
-        <canvas id="universe-canvas"></canvas>
         <div class="hero-content">
-          <h1 class="universe-title">
+          <h1>
+            <img class="mockup" src="./logo.svg" alt="Jicoo" />
+          </h1>
+          <h2 class="universe-title">
             時空を超えて<br>
             最高の製品を創り続ける
-          </h1>
+          </h2>
         </div>
       </section>
       <section class="content">
-        <div class="content-inner">
-          <h2>Radial Universe Animation</h2>
-          <p>This page demonstrates a radial, universe-like canvas animation. The animation features radiating lines from the center and floating particles that create a cosmic atmosphere.</p>
-          <div style="height: 150vh; padding: 2rem 0;">
-            <h3>Features:</h3>
-            <ul style="margin: 1rem 0; padding-left: 2rem;">
-              <li>Central radial line animation</li>
-              <li>Floating square particles</li>
-              <li>Mouse interaction effects</li>
-              <li>Smooth animation performance</li>
-            </ul>
-          </div>
-        </div>
+        <img class="mockup" src="./page-mockup.png" alt="" />
       </section>
     </div>
     <script type="module">
